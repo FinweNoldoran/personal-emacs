@@ -11,6 +11,12 @@
 
 (set-face-attribute 'default nil :foundry "apple" :family "Source Code Pro" :height 140)
 
+;;org-mode
+(require 'org)
+(define-key global-map "\C-cl" 'org-store-link)
+(define-key global-map "\C-ca" 'org-agenda)
+(setq org-log-done t)
+
 ;;auto-complete
 (require 'auto-complete)
 ; do default config for auto-complete
@@ -111,6 +117,12 @@ TeX-command-list)))
 
 (add-hook 'LaTeX-mode-hook (lambda ()
 (push
+'("xelatex" "xelatex --shell-escape -output-directory=Output %s" TeX-run-command nil t
+:help "Run xelatex on file, need Output directory")
+TeX-command-list)))
+
+(add-hook 'LaTeX-mode-hook (lambda ()
+(push
 '("pdflatex" "pdflatex --synctex=1 -output-directory=Output --shell-escape %s" TeX-run-TeX nil t
 :help "Run pdflatex on file")
 TeX-command-list)))
@@ -155,7 +167,9 @@ TeX-command-list)))
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(custom-safe-themes (quote ("cd70962b469931807533f5ab78293e901253f5eeb133a46c2965359f23bfb2ea" default))))
+ '(TeX-shell "/usr/local/bin/zsh")
+ '(custom-safe-themes (quote ("cd70962b469931807533f5ab78293e901253f5eeb133a46c2965359f23bfb2ea" default)))
+ '(nxml-slash-auto-complete-flag t))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
