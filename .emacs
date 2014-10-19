@@ -4,10 +4,13 @@
   '("melpa" . "http://melpa.milkbox.net/packages/") t)
 
 (package-initialize)
-(require 'color-theme)
-(setq color-theme-is-global t)
-(color-theme-initialize)
-(color-theme-solarized-dark)
+
+(add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
+
+;(require 'color-theme)
+;(setq color-theme-is-global t)
+;(color-theme-initialize)
+(load-theme 'monokai t)
 
 (set-face-attribute 'default nil :foundry "apple" :family "Source Code Pro" :height 140)
 
