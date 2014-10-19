@@ -5,7 +5,6 @@
 
 (package-initialize)
 
-(add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
 
 ;(require 'color-theme)
 ;(setq color-theme-is-global t)
