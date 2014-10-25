@@ -5,13 +5,15 @@
 
 (package-initialize)
 
+;linewrap
+(global-visual-line-mode 1)
 
 ;(require 'color-theme)
 ;(setq color-theme-is-global t)
 ;(color-theme-initialize)
 (load-theme 'monokai t)
 
-(set-face-attribute 'default nil :foundry "apple" :family "Source Code Pro" :height 140)
+(set-face-attribute 'default nil :foundry "apple" :family "Source Code Pro for Powerline" :height 140)
 
 ;;org-mode
 (require 'org)
@@ -109,8 +111,6 @@
 (server-start);
  
 ;; Use Skim as viewer, enable source <-> PDF sync
-;; make latexmk available via C-c C-c
-;; Note: SyncTeX is setup via ~/.latexmkrc (see below)
 (add-hook 'LaTeX-mode-hook (lambda ()
 (push
 '("latexmk" "latexmk -pdf %s" TeX-run-TeX nil t
@@ -125,21 +125,24 @@ TeX-command-list)))
 
 (add-hook 'LaTeX-mode-hook (lambda ()
 (push
-'("pdflatex" "pdflatex --synctex=1 -output-directory=Output --shell-escape %s" TeX-run-TeX nil t
+'("bibtex out" "bibtex ./Output/%s" TeX-run-command nil t
+:help "Run bibtex in Output directory")
+TeX-command-list)))
+
+(add-hook 'LaTeX-mode-hook (lambda ()
+(push
+'("pdflatex" "pdflatex --synctex=1 -output-directory=Output --shell-escape %s && ln -s Output/*.pdf ." TeX-run-TeX nil t
 :help "Run pdflatex on file")
 TeX-command-list)))
 
 (add-hook 'TeX-mode-hook '(lambda () (setq TeX-command-default "pdflatex")))
 
-
- 
 ;; use Skim as default pdf viewer
 ;; Skim's displayline is used for forward search (from .tex to .pdf)
 ;; option -b highlights the current line; option -g opens Skim in the background
 (setq TeX-view-program-selection '((output-pdf "PDF Viewer")))
 (setq TeX-view-program-list
 '(("PDF Viewer" "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b")))
-
 
 
 (defadvice yes-or-no-p (around prevent-dialog activate)
@@ -169,8 +172,13 @@ TeX-command-list)))
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(LaTeX-command
+   "latex --synctex=1 -output-directory=Output --shell-escape")
  '(TeX-shell "/usr/local/bin/zsh")
- '(custom-safe-themes (quote ("cd70962b469931807533f5ab78293e901253f5eeb133a46c2965359f23bfb2ea" default)))
+ '(TeX-view-program-selection (quote ((output-pdf "PDF Viewer"))))
+ '(custom-safe-themes
+   (quote
+    ("cd70962b469931807533f5ab78293e901253f5eeb133a46c2965359f23bfb2ea" default)))
  '(nxml-slash-auto-complete-flag t))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
