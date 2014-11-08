@@ -11,7 +11,7 @@
 ;(require 'color-theme)
 ;(setq color-theme-is-global t)
 ;(color-theme-initialize)
-(load-theme 'monokai t)
+(load-theme 'solarized-dark t)
 
 (set-face-attribute 'default nil :foundry "apple" :family "Source Code Pro for Powerline" :height 140)
 
@@ -31,6 +31,11 @@
 ; start yasnippet with emacs
 (require 'yasnippet)
 (yas-global-mode 1)
+
+;;aspell and path
+(setq ispell-program-name "aspell")
+(add-to-list 'exec-path "/usr/local/bin")
+(setq ispell-dictionary "en_GB")
 
 ;;iedit amazeballs hack
 (define-key global-map (kbd "C-c ;") 'iedit-mode)
@@ -103,7 +108,6 @@
 (setq TeX-parse-self t)
 (setq-default TeX-master nil)
 (add-hook 'LaTeX-mode-hook 'visual-line-mode)
-(add-hook 'LaTeX-mode-hook 'flyspell-mode)
 (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
 (add-hook 'LaTeX-mode-hook 'turn-on-reftex)
 (setq reftex-plug-into-AUCTeX t)
@@ -119,20 +123,26 @@ TeX-command-list)))
 
 (add-hook 'LaTeX-mode-hook (lambda ()
 (push
-'("xelatex" "xelatex --shell-escape -output-directory=Output %s" TeX-run-command nil t
+'("xelatex" "xelatex --shell-escape --synctex=1 -output-directory=Output %s && ln -s Output/*.pdf ." TeX-run-command nil t
 :help "Run xelatex on file, need Output directory")
 TeX-command-list)))
 
 (add-hook 'LaTeX-mode-hook (lambda ()
 (push
-'("bibtex out" "bibtex ./Output/%s" TeX-run-command nil t
-:help "Run bibtex in Output directory")
+'("Clean" "TeX-clean ./Output/%s" TeX-run-command nil t
+:help "Run bibtex in current directory")
+TeX-command-list)))
+
+(add-hook 'LaTeX-mode-hook (lambda ()
+(push
+'("BibTeX" "bibtex ./Output/%s" TeX-run-command nil t
+:help "Run bibtex in current directory")
 TeX-command-list)))
 
 (add-hook 'LaTeX-mode-hook (lambda ()
 (push
 '("pdflatex" "pdflatex --synctex=1 -output-directory=Output --shell-escape %s && ln -s Output/*.pdf ." TeX-run-TeX nil t
-:help "Run pdflatex on file")
+:help "Run pdflatex on file, need output directory")
 TeX-command-list)))
 
 (add-hook 'TeX-mode-hook '(lambda () (setq TeX-command-default "pdflatex")))
@@ -172,8 +182,7 @@ TeX-command-list)))
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(LaTeX-command
-   "latex --synctex=1 -output-directory=Output --shell-escape")
+ '(LaTeX-command "latex --synctex=1 -output-directory=Output --shell-escape")
  '(TeX-shell "/usr/local/bin/zsh")
  '(TeX-view-program-selection (quote ((output-pdf "PDF Viewer"))))
  '(custom-safe-themes
