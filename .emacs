@@ -5,13 +5,15 @@
 
 (package-initialize)
 
+(setq inhibit-startup-screen t)
+
 ;linewrap
 (global-visual-line-mode 1)
 
 ;(require 'color-theme)
 ;(setq color-theme-is-global t)
 ;(color-theme-initialize)
-(load-theme 'solarized-dark t)
+(load-theme 'solarized-light t)
 
 (set-face-attribute 'default nil :foundry "apple" :family "Source Code Pro for Powerline" :height 140)
 
@@ -40,6 +42,9 @@
 ;;iedit amazeballs hack
 (define-key global-map (kbd "C-c ;") 'iedit-mode)
 
+;; parenthesis mode
+(show-paren-mode 1)
+
 ;;god-mode
 (require 'god-mode)
 (global-set-key (kbd "<escape>") 'god-local-mode)
@@ -62,6 +67,32 @@
 
 ;; smooth scroll
 (require 'smooth-scrolling)
+
+;;matlab-emacs
+(add-to-list 'load-path "~/.emacs.d/personal/matlab-emacs")
+(load-library "matlab-load")
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(LaTeX-command "latex --synctex=1 -output-directory=Output --shell-escape")
+ '(TeX-shell "/usr/local/bin/zsh")
+ '(TeX-view-program-selection (quote ((output-pdf "PDF Viewer"))) t)
+ '(custom-safe-themes
+   (quote
+    ("d677ef584c6dfc0697901a44b885cc18e206f05114c8a3b7fde674fce6180879" "31a01668c84d03862a970c471edbd377b2430868eccf5e8a9aec6831f1a0908d" "cd70962b469931807533f5ab78293e901253f5eeb133a46c2965359f23bfb2ea" default)))
+ '(matlab-shell-command-switches (quote ("-nodesktop -nosplash")))
+ '(mlint-programs
+   (quote
+    ("mlint" "mac/mlint" "/Applications/MATLAB_R2014b.app/bin/maci64/mlint")))
+ '(nxml-slash-auto-complete-flag t))
+(add-hook 'matlab-mode-hook 'auto-complete-mode)
+(setq auto-mode-alist
+    (cons
+     '("\\.m$" . matlab-mode)
+     auto-mode-alist))
+
 
 
 ;linum test:
@@ -145,6 +176,12 @@ TeX-command-list)))
 :help "Run pdflatex on file, need output directory")
 TeX-command-list)))
 
+(add-hook 'LaTeX-mode-hook (lambda ()
+(push
+'("pdflatex_noop" "pdflatex --synctex=1 --shell-escape %s" TeX-run-TeX nil t
+:help "Run pdflatex on file, no output directory")
+TeX-command-list)))
+
 (add-hook 'TeX-mode-hook '(lambda () (setq TeX-command-default "pdflatex")))
 
 ;; use Skim as default pdf viewer
@@ -153,6 +190,24 @@ TeX-command-list)))
 (setq TeX-view-program-selection '((output-pdf "PDF Viewer")))
 (setq TeX-view-program-list
 '(("PDF Viewer" "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b")))
+
+
+;; Tex Fold
+;; (add-hook 'LaTeX-mode-hook 
+;;       (lambda () 
+;;         (TeX-fold-mode 1)
+;;         (add-hook 'find-file-hook 'TeX-fold-buffer t t)
+;;         (add-hook 'after-change-functions 
+;;               (lambda (start end oldlen) 
+;;                 (when (= (- end start) 1)
+;;                   (let ((char-point 
+;;                                  (buffer-substring-no-properties 
+;;                                   start end)))
+;;                    (when (or (string= char-point "}")
+;;                          (string= char-point "$"))
+;;                     (TeX-fold-paragraph)))))
+;; 	      t t)))
+
 
 
 (defadvice yes-or-no-p (around prevent-dialog activate)
@@ -177,18 +232,7 @@ TeX-command-list)))
 
 (setq auto-save-default nil)
 
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(LaTeX-command "latex --synctex=1 -output-directory=Output --shell-escape")
- '(TeX-shell "/usr/local/bin/zsh")
- '(TeX-view-program-selection (quote ((output-pdf "PDF Viewer"))))
- '(custom-safe-themes
-   (quote
-    ("cd70962b469931807533f5ab78293e901253f5eeb133a46c2965359f23bfb2ea" default)))
- '(nxml-slash-auto-complete-flag t))
+
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
