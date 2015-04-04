@@ -5,7 +5,17 @@
 
 (package-initialize)
 
+(setq explicit-shell-file-name "/usr/local/bin/zsh")
+
+(setq multi-term-program "/bin/zsh")
+
 (setq inhibit-startup-screen t)
+
+;; get correct terminal
+(require 'exec-path-from-shell)
+(when (memq window-system '(mac ns))
+      (exec-path-from-shell-initialize))
+
 
 ;linewrap
 (global-visual-line-mode 1)
@@ -17,11 +27,24 @@
 
 (set-face-attribute 'default nil :foundry "apple" :family "Source Code Pro for Powerline" :height 140)
 
+
 ;;org-mode
 (require 'org)
 (define-key global-map "\C-cl" 'org-store-link)
 (define-key global-map "\C-ca" 'org-agenda)
 (setq org-log-done t)
+
+;ess-mode configuration
+(setq ess-ask-for-ess-directory nil) 
+(setq inferior-R-program-name "/usr/local/bin/R") 
+(setq ess-local-process-name "R") 
+(setq ansi-color-for-comint-mode 'filter) 
+(setq comint-scroll-to-bottom-on-input t) 
+(setq comint-scroll-to-bottom-on-output t) 
+(setq comint-move-point-for-output t)
+(setq ess-eval-visibly-p nil)
+(require 'ess-site)
+
 
 ;;auto-complete
 (require 'auto-complete)
