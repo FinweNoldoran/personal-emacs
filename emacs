@@ -41,7 +41,7 @@
 
 ;;theme
 (if window-system
-    (load-theme 'solarized-dark)
+    (load-theme 'solarized-dark t)
   (load-theme 'monokai t))
 
 ;; svg mode line
@@ -297,9 +297,6 @@ TeX-command-list)))
 (setq backup-directory-alist (quote ((".*" . "~/.emacs_backups/"))))
 
 (setq auto-save-default nil)
-
-
-
 
 
 
