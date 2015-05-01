@@ -1,7 +1,7 @@
 ;;melpa packagemanager
 (require 'package)
 (add-to-list 'package-archives
-  '("melpa" . "http://melpa.milkbox.net/packages/") t)
+	     '("melpa" . "http://melpa.milkbox.net/packages/") t)
 
 (package-initialize)
 
@@ -16,14 +16,48 @@
 (when (memq window-system '(mac ns))
       (exec-path-from-shell-initialize))
 
+;;helm
+(require 'helm-config)
+(helm-mode 1)
+(helm-autoresize-mode t)
+(global-set-key (kbd "M-x") 'helm-M-x)
 
-;linewrap
+
+;; indent
+(global-aggressive-indent-mode 1)
+(add-to-list 'aggressive-indent-excluded-modes 'html-mode)
+
+					;rainbow delimiters
+(add-hook 'prog-mode-hook #'rainbow-delimiters-mode)
+
+;; powerline
+(add-to-list 'load-path "~/.emacs.d/vendor/emacs-powerline")
+;;(require 'powerline)
+;;(setq powerline-arrow-shape 'curve)
+
+;; theme
+(if window-system
+    (setq solarized-high-contrast-mode-line t)) ;;required for svg modeline.
+
+;;theme
+(if window-system
+    (load-theme 'solarized-dark)
+  (load-theme 'monokai t))
+
+;; svg mode line
+(add-to-list 'load-path "~/.emacs.d/vendor/svg-line")
+
+(if window-system
+    (require 'ocodo-slim-svg-mode-line)
+  (require 'powerline))
+
+(set-face-attribute 'mode-line nil :box nil)
+(set-face-attribute 'mode-line-inactive nil :box nil)
+
+
+;;linewrap
 (global-visual-line-mode 1)
 
-;(require 'color-theme)
-;(setq color-theme-is-global t)
-;(color-theme-initialize)
-(load-theme 'solarized-light t)
 
 (set-face-attribute 'default nil :foundry "apple" :family "Source Code Pro for Powerline" :height 140)
 
@@ -34,7 +68,7 @@
 (define-key global-map "\C-ca" 'org-agenda)
 (setq org-log-done t)
 
-;ess-mode configuration
+					;ess-mode configuration
 (setq ess-ask-for-ess-directory nil) 
 (setq inferior-R-program-name "/usr/local/bin/R") 
 (setq ess-local-process-name "R") 
@@ -48,12 +82,12 @@
 
 ;;auto-complete
 (require 'auto-complete)
-; do default config for auto-complete
+					; do default config for auto-complete
 (require 'auto-complete-config)
 (ac-config-default)
 
 ;;yasnippet
-; start yasnippet with emacs
+					; start yasnippet with emacs
 (require 'yasnippet)
 (yas-global-mode 1)
 
@@ -104,17 +138,21 @@
  '(TeX-view-program-selection (quote ((output-pdf "PDF Viewer"))) t)
  '(custom-safe-themes
    (quote
-    ("d677ef584c6dfc0697901a44b885cc18e206f05114c8a3b7fde674fce6180879" "31a01668c84d03862a970c471edbd377b2430868eccf5e8a9aec6831f1a0908d" "cd70962b469931807533f5ab78293e901253f5eeb133a46c2965359f23bfb2ea" default)))
+    ("8aebf25556399b58091e533e455dd50a6a9cba958cc4ebb0aab175863c25b9a4" "d677ef584c6dfc0697901a44b885cc18e206f05114c8a3b7fde674fce6180879" "31a01668c84d03862a970c471edbd377b2430868eccf5e8a9aec6831f1a0908d" "cd70962b469931807533f5ab78293e901253f5eeb133a46c2965359f23bfb2ea" default)))
  '(matlab-shell-command-switches (quote ("-nodesktop -nosplash")))
  '(mlint-programs
    (quote
     ("mlint" "mac/mlint" "/Applications/MATLAB_R2014b.app/bin/maci64/mlint")))
- '(nxml-slash-auto-complete-flag t))
+ '(ns-alternate-modifier (quote meta))
+ '(nxml-slash-auto-complete-flag t)
+ '(preview-gs-options
+   (quote
+    ("-q" "-dDELAYSAFER" "-dNOPAUSE" "-DNOPLATFONTS" "-dPrinted" "-dTextAlphaBits=4" "-dGraphicsAlphaBits=4" "-dNOSAFER"))))
 (add-hook 'matlab-mode-hook 'auto-complete-mode)
 (setq auto-mode-alist
-    (cons
-     '("\\.m$" . matlab-mode)
-     auto-mode-alist))
+      (cons
+       '("\\.m$" . matlab-mode)
+       auto-mode-alist))
 
 
 
@@ -139,7 +177,7 @@
 
 ;;tabs for c++
 (setq c-default-style "linux"
-          c-basic-offset 4)
+      c-basic-offset 4)
 
 ;;auto brackets
 (require 'autopair)
@@ -149,13 +187,33 @@
 
 (setq ring-bell-function #'ignore)
 
+;;flyspell for latex
+					;(add-hook 'LaTeX-mode-hook 'turn-on-flyspell)
+
+(add-hook 'LaTeX-mode-hook 
+	  (lambda () 
+	    (TeX-fold-mode 1)
+	    (add-hook 'find-file-hook 'TeX-fold-buffer t t)
+	    (add-hook 'after-change-functions 
+		      (lambda (start end oldlen) 
+			(when (= (- end start) 1)
+			  (let ((char-point 
+                                 (buffer-substring-no-properties 
+                                  start end)))
+			    (when (or (string= char-point "}")
+				      (string= char-point "$"))
+			      (TeX-fold-paragraph)))))
+		      t t)))
+
+
+
 ;;mactex location
 (getenv "PATH")
- (setenv "PATH"
-(concat
- "/usr/texbin" ":"
+(setenv "PATH"
+	(concat
+	 "/usr/texbin" ":"
 
-(getenv "PATH")))
+	 (getenv "PATH")))
 
 ;; AucTeX
 (setq TeX-auto-save t)
@@ -166,26 +224,28 @@
 (add-hook 'LaTeX-mode-hook 'turn-on-reftex)
 (setq reftex-plug-into-AUCTeX t)
 (setq TeX-PDF-mode t)
-(server-start);
- 
+(require 'server)
+(unless (server-running-p)
+  (server-start))
+
 ;; Use Skim as viewer, enable source <-> PDF sync
 (add-hook 'LaTeX-mode-hook (lambda ()
-(push
-'("latexmk" "latexmk -pdf %s" TeX-run-TeX nil t
-:help "Run latexmk on file")
-TeX-command-list)))
+			     (push
+			      '("latexmk" "latexmk -pdflatex='pdflatex --shell-escape -synctex=1' -pdf -output-directory=Output %s" TeX-run-TeX nil t
+				:help "Run latexmk on file")
+			      TeX-command-list)))
 
 (add-hook 'LaTeX-mode-hook (lambda ()
-(push
-'("xelatex" "xelatex --shell-escape --synctex=1 -output-directory=Output %s && ln -s Output/*.pdf ." TeX-run-command nil t
-:help "Run xelatex on file, need Output directory")
-TeX-command-list)))
+			     (push
+			      '("xelatex" "xelatex --shell-escape --synctex=1 -output-directory=Output %s && ln -s Output/*.pdf ." TeX-run-command nil t
+				:help "Run xelatex on file, need Output directory")
+			      TeX-command-list)))
 
 (add-hook 'LaTeX-mode-hook (lambda ()
-(push
-'("Clean" "TeX-clean ./Output/%s" TeX-run-command nil t
-:help "Run bibtex in current directory")
-TeX-command-list)))
+			     (push
+			      '("Clean" "TeX-clean ./Output/%s" TeX-run-command nil t
+				:help "Run bibtex in current directory")
+			      TeX-command-list)))
 
 (add-hook 'LaTeX-mode-hook (lambda ()
 (push
@@ -194,16 +254,16 @@ TeX-command-list)))
 TeX-command-list)))
 
 (add-hook 'LaTeX-mode-hook (lambda ()
-(push
-'("pdflatex" "pdflatex --synctex=1 -output-directory=Output --shell-escape %s && ln -s Output/*.pdf ." TeX-run-TeX nil t
-:help "Run pdflatex on file, need output directory")
-TeX-command-list)))
+			     (push
+			      '("pdflatex" "pdflatex --synctex=1 -output-directory=Output --shell-escape %s && ln -s Output/*.pdf ." TeX-run-TeX nil t
+				:help "Run pdflatex on file, need output directory")
+			      TeX-command-list)))
 
 (add-hook 'LaTeX-mode-hook (lambda ()
-(push
-'("pdflatex_noop" "pdflatex --synctex=1 --shell-escape %s" TeX-run-TeX nil t
-:help "Run pdflatex on file, no output directory")
-TeX-command-list)))
+			     (push
+			      '("pdflatex_noop" "pdflatex --synctex=1 --shell-escape %s" TeX-run-TeX nil t
+				:help "Run pdflatex on file, no output directory")
+			      TeX-command-list)))
 
 (add-hook 'TeX-mode-hook '(lambda () (setq TeX-command-default "pdflatex")))
 
@@ -212,24 +272,7 @@ TeX-command-list)))
 ;; option -b highlights the current line; option -g opens Skim in the background
 (setq TeX-view-program-selection '((output-pdf "PDF Viewer")))
 (setq TeX-view-program-list
-'(("PDF Viewer" "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b")))
-
-
-;; Tex Fold
-;; (add-hook 'LaTeX-mode-hook 
-;;       (lambda () 
-;;         (TeX-fold-mode 1)
-;;         (add-hook 'find-file-hook 'TeX-fold-buffer t t)
-;;         (add-hook 'after-change-functions 
-;;               (lambda (start end oldlen) 
-;;                 (when (= (- end start) 1)
-;;                   (let ((char-point 
-;;                                  (buffer-substring-no-properties 
-;;                                   start end)))
-;;                    (when (or (string= char-point "}")
-;;                          (string= char-point "$"))
-;;                     (TeX-fold-paragraph)))))
-;; 	      t t)))
+      '(("PDF Viewer" "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b")))
 
 
 
@@ -242,7 +285,7 @@ TeX-command-list)))
   (let ((use-dialog-box nil))
     ad-do-it))
 
- ;; ========== Place Backup Files in Specific Directory ==========
+;; ========== Place Backup Files in Specific Directory ==========
 
 ;; Enable backup files.
 (setq make-backup-files t)
@@ -254,6 +297,11 @@ TeX-command-list)))
 (setq backup-directory-alist (quote ((".*" . "~/.emacs_backups/"))))
 
 (setq auto-save-default nil)
+
+
+
+
+
 
 
 (custom-set-faces
