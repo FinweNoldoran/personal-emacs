@@ -16,6 +16,8 @@
 (when (memq window-system '(mac ns))
       (exec-path-from-shell-initialize))
 
+;test new mac git
+
 ;;helm
 (require 'helm-config)
 (helm-mode 1)
