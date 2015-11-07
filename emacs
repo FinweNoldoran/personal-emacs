@@ -1,41 +1,75 @@
-;;melpa packagemanager
-(require 'package)
+(require 'package) ;; You might already have this line
+
 (add-to-list 'package-archives
-	     '("melpa" . "http://melpa.milkbox.net/packages/") t)
+             '("melpa" . "http://melpa.org/packages/") t)
+
+;;comple emacs directory
+;;(byte-recompile-directory (expand-file-name "~/.emacs.d") 0)
 
 (package-initialize)
-
-(setq explicit-shell-file-name "/usr/local/bin/zsh")
-
-(setq multi-term-program "/bin/zsh")
+(eval-when-compile
+  (require 'use-package))
 
 (setq inhibit-startup-screen t)
 
+(setq explicit-shell-file-name "/usr/local/bin/zsh")
+
+;;recent files
+(require 'recentf)
+(recentf-mode 1)
+(setq recentf-max-menu-items 10)
+(global-set-key "\C-x\ \C-r" 'recentf-open-files)
+
+;; reftex helm compat
+
+(eval-after-load 'helm-mode '(add-to-list
+			      'helm-completing-read-handlers-alist '(reftex-citation . nil) )
+		 )
+
+;;magit
+(setq magit-last-seen-setup-instructions "1.4.0")
+
 ;; get correct terminal
+
 (require 'exec-path-from-shell)
 (when (memq window-system '(mac ns))
-      (exec-path-from-shell-initialize))
+  (exec-path-from-shell-initialize))
 
-;test new mac git
+;;hide instead of close
+(defadvice handle-delete-frame (around my-handle-delete-frame-advice activate)
+  "Hide Emacs instead of closing the last frame"
+  (let ((frame   (posn-window (event-start event)))
+        (numfrs  (length (frame-list))))
+    (if (> numfrs 1)
+	ad-do-it
+      (do-applescript "tell application \"System Events\" to tell process \"Emacs\" to set visible to false"))))
 
 ;;helm
-(require 'helm-config)
-(helm-mode 1)
-(helm-autoresize-mode t)
-(global-set-key (kbd "M-x") 'helm-M-x)
-
+(use-package helm
+  :init
+  (require 'helm-config)
+  (helm-mode 1)
+  (helm-autoresize-mode t)
+  (global-set-key (kbd "M-x") 'helm-M-x))
 
 ;; indent
-(global-aggressive-indent-mode 1)
-(add-to-list 'aggressive-indent-excluded-modes 'html-mode)
+(use-package aggressive-indent
+  :config
+  (global-aggressive-indent-mode 1)
+  (add-to-list 'aggressive-indent-excluded-modes 'html-mode))
 
-					;rainbow delimiters
-(add-hook 'prog-mode-hook #'rainbow-delimiters-mode)
+;;rainbow delimiters
+(use-package rainbow-delimiters
+  :init
+  (add-hook 'prog-mode-hook #'rainbow-delimiters-mode))
 
 ;; powerline
 (add-to-list 'load-path "~/.emacs.d/vendor/emacs-powerline")
 ;;(require 'powerline)
 ;;(setq powerline-arrow-shape 'curve)
+
+;; font
+(set-face-attribute 'default nil :foundry "apple" :family "Sauce Code Powerline" :height 140)
 
 ;; theme
 (if window-system
@@ -43,7 +77,7 @@
 
 ;;theme
 (if window-system
-    (load-theme 'solarized-dark t)
+    (load-theme 'solarized-light t)
   (load-theme 'monokai t))
 
 ;; svg mode line
@@ -56,42 +90,43 @@
 (set-face-attribute 'mode-line nil :box nil)
 (set-face-attribute 'mode-line-inactive nil :box nil)
 
-
 ;;linewrap
 (global-visual-line-mode 1)
 
 
-(set-face-attribute 'default nil :foundry "apple" :family "Source Code Pro for Powerline" :height 140)
-
-
 ;;org-mode
-(require 'org)
-(define-key global-map "\C-cl" 'org-store-link)
-(define-key global-map "\C-ca" 'org-agenda)
-(setq org-log-done t)
+(use-package org
+  :config
+  (define-key global-map "\C-cl" 'org-store-link)
+  (define-key global-map "\C-ca" 'org-agenda)
+  (setq org-log-done t))
 
-					;ess-mode configuration
-(setq ess-ask-for-ess-directory nil) 
-(setq inferior-R-program-name "/usr/local/bin/R") 
-(setq ess-local-process-name "R") 
-(setq ansi-color-for-comint-mode 'filter) 
-(setq comint-scroll-to-bottom-on-input t) 
-(setq comint-scroll-to-bottom-on-output t) 
-(setq comint-move-point-for-output t)
-(setq ess-eval-visibly-p nil)
-(require 'ess-site)
 
+(use-package julia-mode)
+
+(use-package ess-site
+  :ensure ess
+  :defer t
+  :init
+  (setq ess-ask-for-ess-directory nil)
+  (setq ess-eval-visibly-p nil)
+  :commands R
+  :commands julia)
 
 ;;auto-complete
 (require 'auto-complete)
-					; do default config for auto-complete
+;; do default config for auto-complete
 (require 'auto-complete-config)
 (ac-config-default)
 
 ;;yasnippet
-					; start yasnippet with emacs
-(require 'yasnippet)
-(yas-global-mode 1)
+;; start yasnippet with emacs
+(use-package yasnippet
+  :defer t
+  :init
+  (yas-global-mode 1)
+  (add-hook 'term-mode-hook (lambda()
+			      (setq yas-dont-activate t))))
 
 ;;aspell and path
 (setq ispell-program-name "aspell")
@@ -105,8 +140,9 @@
 (show-paren-mode 1)
 
 ;;god-mode
-(require 'god-mode)
-(global-set-key (kbd "<escape>") 'god-local-mode)
+(use-package god-mode
+  :init
+  (global-set-key (kbd "<escape>") 'god-local-mode))
 
 (defun my-update-cursor ()
   (setq cursor-type (if (or god-local-mode buffer-read-only)
@@ -125,40 +161,9 @@
 (add-hook 'after-init-hook #'global-flycheck-mode)
 
 ;; smooth scroll
-(require 'smooth-scrolling)
+(use-package smooth-scrolling)
 
-;;matlab-emacs
-(add-to-list 'load-path "~/.emacs.d/personal/matlab-emacs")
-(load-library "matlab-load")
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(LaTeX-command "latex --synctex=1 -output-directory=Output --shell-escape")
- '(TeX-shell "/usr/local/bin/zsh")
- '(TeX-view-program-selection (quote ((output-pdf "PDF Viewer"))) t)
- '(custom-safe-themes
-   (quote
-    ("8aebf25556399b58091e533e455dd50a6a9cba958cc4ebb0aab175863c25b9a4" "d677ef584c6dfc0697901a44b885cc18e206f05114c8a3b7fde674fce6180879" "31a01668c84d03862a970c471edbd377b2430868eccf5e8a9aec6831f1a0908d" "cd70962b469931807533f5ab78293e901253f5eeb133a46c2965359f23bfb2ea" default)))
- '(matlab-shell-command-switches (quote ("-nodesktop -nosplash")))
- '(mlint-programs
-   (quote
-    ("mlint" "mac/mlint" "/Applications/MATLAB_R2014b.app/bin/maci64/mlint")))
- '(ns-alternate-modifier (quote meta))
- '(nxml-slash-auto-complete-flag t)
- '(preview-gs-options
-   (quote
-    ("-q" "-dDELAYSAFER" "-dNOPAUSE" "-DNOPLATFONTS" "-dPrinted" "-dTextAlphaBits=4" "-dGraphicsAlphaBits=4" "-dNOSAFER"))))
-(add-hook 'matlab-mode-hook 'auto-complete-mode)
-(setq auto-mode-alist
-      (cons
-       '("\\.m$" . matlab-mode)
-       auto-mode-alist))
-
-
-
-;linum test:
+;;linum test:
 
 (global-linum-mode t)
 (unless window-system
@@ -182,32 +187,12 @@
       c-basic-offset 4)
 
 ;;auto brackets
-(require 'autopair)
-(autopair-global-mode 1)
-(setq autopair-autowrap t)
-
+(use-package autopair
+  :init
+  (autopair-global-mode 1)
+  (setq autopair-autowrap t))
 
 (setq ring-bell-function #'ignore)
-
-;;flyspell for latex
-					;(add-hook 'LaTeX-mode-hook 'turn-on-flyspell)
-
-(add-hook 'LaTeX-mode-hook 
-	  (lambda () 
-	    (TeX-fold-mode 1)
-	    (add-hook 'find-file-hook 'TeX-fold-buffer t t)
-	    (add-hook 'after-change-functions 
-		      (lambda (start end oldlen) 
-			(when (= (- end start) 1)
-			  (let ((char-point 
-                                 (buffer-substring-no-properties 
-                                  start end)))
-			    (when (or (string= char-point "}")
-				      (string= char-point "$"))
-			      (TeX-fold-paragraph)))))
-		      t t)))
-
-
 
 ;;mactex location
 (getenv "PATH")
@@ -222,6 +207,7 @@
 (setq TeX-parse-self t)
 (setq-default TeX-master nil)
 (add-hook 'LaTeX-mode-hook 'visual-line-mode)
+(add-hook 'LaTeX-mode-hook (lambda () (helm-mode -1)))
 (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
 (add-hook 'LaTeX-mode-hook 'turn-on-reftex)
 (setq reftex-plug-into-AUCTeX t)
@@ -233,13 +219,13 @@
 ;; Use Skim as viewer, enable source <-> PDF sync
 (add-hook 'LaTeX-mode-hook (lambda ()
 			     (push
-			      '("latexmk" "latexmk -pdflatex='pdflatex --shell-escape -synctex=1' -pdf -output-directory=Output %s" TeX-run-TeX nil t
+			      '("latexmk" "latexmk -pdflatex='pdflatex --shell-escape --file-line-error -synctex=1' -pdf -output-directory=Output %s" TeX-run-TeX nil t
 				:help "Run latexmk on file")
 			      TeX-command-list)))
 
 (add-hook 'LaTeX-mode-hook (lambda ()
 			     (push
-			      '("xelatex" "xelatex --shell-escape --synctex=1 -output-directory=Output %s && ln -s Output/*.pdf ." TeX-run-command nil t
+			      '("xelatex" "xelatex --shell-escape --file-line-error --synctex=1 -output-directory=Output %s && ln -s Output/*.pdf ." TeX-run-command nil t
 				:help "Run xelatex on file, need Output directory")
 			      TeX-command-list)))
 
@@ -250,20 +236,20 @@
 			      TeX-command-list)))
 
 (add-hook 'LaTeX-mode-hook (lambda ()
-(push
-'("BibTeX" "bibtex ./Output/%s" TeX-run-command nil t
-:help "Run bibtex in current directory")
-TeX-command-list)))
+			     (push
+			      '("BibTeX" "bibtex ./Output/%s" TeX-run-command nil t
+				:help "Run bibtex in current directory")
+			      TeX-command-list)))
 
 (add-hook 'LaTeX-mode-hook (lambda ()
 			     (push
-			      '("pdflatex" "pdflatex --synctex=1 -output-directory=Output --shell-escape %s && ln -s Output/*.pdf ." TeX-run-TeX nil t
+			      '("pdflatex" "pdflatex --file-line-error --synctex=1 -output-directory=Output --shell-escape %s && ln -s Output/*.pdf ." TeX-run-TeX nil t
 				:help "Run pdflatex on file, need output directory")
 			      TeX-command-list)))
 
 (add-hook 'LaTeX-mode-hook (lambda ()
 			     (push
-			      '("pdflatex_noop" "pdflatex --synctex=1 --shell-escape %s" TeX-run-TeX nil t
+			      '("pdflatex_noop" "pdflatex --file-line-error --synctex=1 --shell-escape %s" TeX-run-TeX nil t
 				:help "Run pdflatex on file, no output directory")
 			      TeX-command-list)))
 
@@ -276,8 +262,6 @@ TeX-command-list)))
 (setq TeX-view-program-list
       '(("PDF Viewer" "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b")))
 
-
-
 (defadvice yes-or-no-p (around prevent-dialog activate)
   "Prevent yes-or-no-p from activating a dialog"
   (let ((use-dialog-box nil))
@@ -289,23 +273,19 @@ TeX-command-list)))
 
 ;; ========== Place Backup Files in Specific Directory ==========
 
-;; Enable backup files.
-(setq make-backup-files t)
-
-;; Enable versioning with default values (keep five last versions, I think!)
-(setq version-control t)
 
 ;; Save all backup file in this directory.
 (setq backup-directory-alist (quote ((".*" . "~/.emacs_backups/"))))
 
+(setq make-backup-files t               ; backup of a file the first time it is saved.
+      backup-by-copying t               ; don't clobber symlinks
+      version-control t                 ; version numbers for backup files
+      delete-old-versions t             ; delete excess backup files silently
+      delete-by-moving-to-trash t
+      kept-old-versions 3               ; oldest versions to keep when a new numbered backup is made (default: 2)
+      kept-new-versions 3               ; newest versions to keep when a new numbered backup is made (default: 2)
+      auto-save-default t               ; auto-save every buffer that visits a file
+      )
+
 (setq auto-save-default nil)
-
-
-
-
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
+(put 'upcase-region 'disabled nil)
