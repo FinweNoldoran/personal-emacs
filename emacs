@@ -27,10 +27,12 @@
 (setq mac-option-modifier 'meta)
 (setq mac-command-modifier 'hyper)
 
+(setq jit-lock-defer-time 0.05) ;; scroll
+
+
 ;;elpy this was giving weird errors
-;;(package-initialize)
-;;(elpy-enable)
-;;(elpy-use-ipython)
+(elpy-enable)
+(elpy-use-ipython)
 
 
 ;;ipython notebook
@@ -66,19 +68,37 @@
 
 (setq inhibit-startup-screen t)
 
-(setq explicit-shell-file-name "/usr/local/bin/zsh")
+(setq explicit-shell-file-name "/bin/sh")
 
 ;; this was for latex preview pane.
 
 ;; get correct terminal
-;;(require 'exec-path-from-shell)
-(when (memq window-system '(mac ns))
-  (exec-path-from-shell-initialize))
 
-;; (exec-path-from-shell-copy-env "PATH")
+(exec-path-from-shell-copy-env "TEXPATH")
+(use-package exec-path-from-shell
+  :config
+  (setq exec-path-from-shell-arguments '("-il"))
+  (when (memq window-system '(mac ns))
+    (exec-path-from-shell-initialize))
+  (exec-path-from-shell-copy-env "TEXPATH"))
 
-(setq exec-path-from-shell-arguments '("-l"))
+;;markdown
+(use-package markdown-mode
+  :ensure t
+  :commands (markdown-mode gfm-mode)
+  :mode (("README\\.md\\'" . gfm-mode)
+         ("\\.md\\'" . markdown-mode)
+         ("\\.markdown\\'" . markdown-mode))
+  :init (setq markdown-command "multimarkdown"))
 
+;;whitespace
+(setq whitespace-display-mappings
+  ;; all numbers are Unicode codepoint in decimal. ⁖ (insert-char 182 1)
+  '(
+    (space-mark 32 [183] [46]) ; 32 SPACE 「 」, 183 MIDDLE DOT 「·」, 46 FULL STOP 「.」
+    (newline-mark 10 [8617 10]) ; 10 LINE FEED
+    (tab-mark 9 [8677 9] [92 9]) ; 9 TAB, 9655 WHITE RIGHT-POINTING TRIANGLE 「▷」
+    ))
 
 ;;recent files
 
@@ -119,8 +139,10 @@
   (global-set-key (kbd "M-x") 'helm-M-x)
   :config
   (eval-after-load 'helm-mode '(add-to-list
-				'helm-completing-read-handlers-alist '(reftex-citation . nil) ))) 
+  'helm-completing-read-handlers-alist '(reftex-citation . nil) ))
+) 
 
+(global-set-key (kbd "C-x C-f") 'helm-find-files)
 
 ;; indent
 (use-package aggressive-indent
@@ -186,8 +208,6 @@
 (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
 
 
-
-
 (use-package julia-mode
   :defer t)
 
@@ -201,10 +221,14 @@
   :commands julia)
 
 ;;auto-complete
-(require 'auto-complete)
-;; do default config for auto-complete
-(require 'auto-complete-config)
-(ac-config-default)
+
+(use-package auto-complete
+  :defer t
+  :config
+  (require 'auto-complete-config)
+  (ac-config-default)
+  (setq ac-modes (delq 'python-mode ac-modes)))
+
 
 ;;yasnippet
 ;; start yasnippet with emacs
@@ -219,6 +243,21 @@
 (setq ispell-program-name "aspell")
 (add-to-list 'exec-path "/usr/local/bin")
 (setq ispell-dictionary "en_GB")
+
+(require 'flycheck)
+(flycheck-define-checker proselint
+  "A linter for prose."
+  :command ("proselint" source-inplace)
+  :error-patterns
+  ((warning line-start (file-name) ":" line ":" column ": "
+        (id (one-or-more (not (any " "))))
+        (message) line-end))
+  :modes (text-mode markdown-mode gfm-mode latex-mode))
+
+(add-to-list 'flycheck-checkers 'proselint)
+
+;;flycheck
+(add-hook 'after-init-hook #'global-flycheck-mode)
 
 ;;iedit amazeballs hack
 (use-package bind-key
@@ -252,8 +291,7 @@
 (global-set-key (kbd "C-x C-3") 'split-window-right)
 (global-set-key (kbd "C-x C-0") 'delete-window)
 
-;;flycheck
-(add-hook 'after-init-hook #'global-flycheck-mode)
+
 
 ;; smooth scroll
 ;; (use-package smooth-scroll
@@ -308,7 +346,7 @@
 (getenv "PATH")
 (setenv "PATH"
 	(concat
-	 "/usr/texbin" ":"
+	 "/Library/TeX/texbin" ":"
 
 	 (getenv "PATH")))
 
@@ -317,6 +355,7 @@
 (setq TeX-parse-self t)
 (setq-default TeX-master nil)
 (add-hook 'LaTeX-mode-hook 'visual-line-mode)
+(add-hook 'LaTeX-mode-hook 'turn-on-orgtbl)
 (add-hook 'LaTeX-mode-hook (lambda () (helm-mode -1)))
 (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
 (add-hook 'LaTeX-mode-hook 'turn-on-reftex)
@@ -353,7 +392,7 @@
 
 (add-hook 'LaTeX-mode-hook (lambda ()
 			     (push
-			      '("pdflatex" "pdflatex --file-line-error --synctex=1 -output-directory=Output --shell-escape %s && ln -s Output/*.pdf ." TeX-run-TeX nil t
+			      '("pdflatex" "pdflatex --file-line-error --synctex=1 -interaction=nonstopmode -output-directory=Output --shell-escape %s && ln -s Output/*.pdf ." TeX-run-TeX nil t
 				:help "Run pdflatex on file, need output directory")
 			      TeX-command-list)))
 
@@ -422,7 +461,8 @@
  '(org-agenda-files (quote ("~/Desktop/todo.org")))
  '(safe-local-variable-values
    (quote
-    ((reftex-default-bibliography /Users/Phil/Dropbox/Oxford/Project1/Labbook/biblio\.bib)
+    ((reftex-default-bibliography /Users/Phil/Dropbox/Oxford/Project1/Labbook/biblio)
+     (reftex-default-bibliography /Users/Phil/Dropbox/Oxford/Project1/Labbook/biblio\.bib)
      (reftex-default-bibliography "/Users/Phil/Dropbox/Oxford/Project1/Labbook/biblio.bib"))))
  '(shell-escape-mode "-shell-escape"))
 (custom-set-faces
