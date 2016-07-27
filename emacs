@@ -1,12 +1,11 @@
-(require 'package) ;; You might already have this line
-
+(require 'package)
 (add-to-list 'package-archives
              '("melpa" . "http://melpa.org/packages/") t)
 
 ;;window size and position
 (when window-system (set-frame-size (selected-frame) 120 30))
 (when (window-system)
-  (set-frame-position (selected-frame) 50 30))
+(set-frame-position (selected-frame) 50 30))
 
 (package-initialize)
 (eval-when-compile
@@ -172,7 +171,7 @@
 
 ;;theme
 ;;(if window-system
-(load-theme 'spacemacs-dark t)
+(load-theme 'spacemacs-light t)
 ;;(load-theme 'monokai t))
 ;; svg mode line
 ;;(add-to-list 'load-path "~/.emacs.d/vendor/svg-line")
@@ -187,11 +186,12 @@
 (use-package spaceline-config
   :config
   (spaceline-spacemacs-theme)
+  :init
   (setq powerline-default-separator 'wave))
 
 
 ;;linewrap
-(global-visual-line-mode 1)
+;;(global-visual-line-mode 1)
 
 
 ;;org-mode
@@ -265,9 +265,6 @@
   :config
   (bind-key* "C-c C-;" 'iedit-mode))
 
-
-
-;;(define-key global-map (kbd "C-c ;") 'iedit-mode)
 
 ;; parenthesis mode
 (show-paren-mode 1)
