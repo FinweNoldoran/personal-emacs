@@ -1,3 +1,4 @@
+;;; init file
 (require 'package)
 (add-to-list 'package-archives
              '("melpa" . "http://melpa.org/packages/") t)
@@ -26,18 +27,17 @@
 (setq mac-option-modifier 'meta)
 (setq mac-command-modifier 'hyper)
 
-(setq jit-lock-defer-time 0.05) ;; scroll
-
 
 ;;elpy this was giving weird errors
+(setq ansi-color-for-comint-mode t)
+(setq python-shell-interpreter "ipython"
+    python-shell-interpreter-args "--simple-prompt --pprint")
 (elpy-enable)
-(elpy-use-ipython)
-
+;;(elpy-use-ipython)
 
 ;;ipython notebook
 (use-package ein
   :defer t)
-
 
 ;; send line to interpreter python
 (defun my-python-line ()
@@ -63,6 +63,24 @@
 
 ;;comple emacs directory
 ;;(byte-recompile-directory (expand-file-name "~/.emacs.d") 0)
+
+(use-package company
+  :defer t
+  :init
+  (add-hook 'c-mode-hook 'company-mode)
+  (add-hook 'c++-mode-hook 'company-mode)
+  :config
+  (setq company-backends '((company-dabbrev-code company-gtags)))
+  )
+
+(use-package helm-gtags
+  :defer t
+  :init
+  (add-hook 'c-mode-hook 'helm-gtags-mode)
+  (add-hook 'c++-mode-hook 'helm-gtags-mode)
+  :bind (("M-." . helm-gtags-find-tag)
+	 ("M-*" . helm-gtags-pop-stack))
+    )
 
 
 (setq inhibit-startup-screen t)
@@ -107,6 +125,12 @@
   (setq recentf-max-menu-items 10)
   (global-set-key "\C-x\ \C-r" 'recentf-open-files))
 
+;; pdb-mode
+   (load-file "~/.emacs.d/vendor/pdb-mode/pdb-mode.el")
+   (setq auto-mode-alist
+       (cons (cons "pdb$" 'pdb-mode)
+              auto-mode-alist ) )
+   (autoload 'pdb-mode "PDB")
 
 ;;shows key options
 (use-package which-key
@@ -136,6 +160,8 @@
   (helm-mode 1)
   (helm-autoresize-mode t)
   (global-set-key (kbd "M-x") 'helm-M-x)
+  :bind
+  ("M-m" . helm-mini)
   :config
   (eval-after-load 'helm-mode '(add-to-list
   'helm-completing-read-handlers-alist '(reftex-citation . nil) ))
@@ -227,7 +253,10 @@
   :config
   (require 'auto-complete-config)
   (ac-config-default)
-  (setq ac-modes (delq 'python-mode ac-modes)))
+  (setq ac-modes (delq 'python-mode ac-modes))
+  (setq ac-modes (delq 'c++-mode ac-modes))
+  (setq ac-modes (delq 'c-mode ac-modes))
+  )
 
 
 ;;yasnippet
@@ -258,6 +287,8 @@
 
 ;;flycheck
 (add-hook 'after-init-hook #'global-flycheck-mode)
+(add-hook 'c++-mode-hook (lambda () (setq flycheck-clang-language-standard "c++11")))
+
 
 ;;iedit amazeballs hack
 (use-package bind-key
@@ -299,9 +330,7 @@
 ;;     (smooth-scroll-mode 1)
 ;;     (setq smooth-scroll/vscroll-step-size 5)))
 
-
 ;;linum test:
-
 
 (global-linum-mode t)
 (unless window-system
@@ -347,7 +376,7 @@
 
 	 (getenv "PATH")))
 
-;; AucTeX
+;;AucTeX
 (setq TeX-auto-save t)
 (setq TeX-parse-self t)
 (setq-default TeX-master nil)
@@ -427,7 +456,7 @@
 (setq font-latex-match-sectioning-3-keywords
       '(
 	("experiment" "{")))
-
+\
 ;; ========== Place Backup Files in Specific Directory ==========
 
 
@@ -456,9 +485,13 @@
     ("bffa9739ce0752a37d9b1eee78fc00ba159748f50dc328af4be661484848e476" "8aebf25556399b58091e533e455dd50a6a9cba958cc4ebb0aab175863c25b9a4" "fa2b58bb98b62c3b8cf3b6f02f058ef7827a8e497125de0254f56e373abee088" default)))
  '(latex-preview-pane-multifile-mode (quote auctex))
  '(org-agenda-files (quote ("~/Desktop/todo.org")))
+ '(package-selected-packages
+   (quote
+    (helm-gtags which-key use-package timp swiper svg-mode-line-themes spacemacs-theme spaceline solarized-theme smooth-scroll rainbow-delimiters paredit osx-trash osx-clipboard org-bullets names monokai-theme markdown-mode magit iedit helm-flycheck helm-ag haskell-mode god-mode exec-path-from-shell ess elpy ein dna-mode autopair auto-complete auctex aggressive-indent)))
  '(safe-local-variable-values
    (quote
-    ((reftex-default-bibliography /Users/Phil/Dropbox/Oxford/Project1/Labbook/biblio)
+    ((reftex-default-bibliography /Users/Phil/Dropbox/Oxford/KDEL/Labbook/biblio\.bib)
+     (reftex-default-bibliography /Users/Phil/Dropbox/Oxford/Project1/Labbook/biblio)
      (reftex-default-bibliography /Users/Phil/Dropbox/Oxford/Project1/Labbook/biblio\.bib)
      (reftex-default-bibliography "/Users/Phil/Dropbox/Oxford/Project1/Labbook/biblio.bib"))))
  '(shell-escape-mode "-shell-escape"))
